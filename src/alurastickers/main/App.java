@@ -1,73 +1,43 @@
 package alurastickers.main;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
-import java.util.List;
-import java.util.Map;
 
-import alurasticker.sticker.StickerFactory;
-import alurastickers.parser.JsonParser;
+import java.io.IOException;
+import java.util.List;
+
+import alurasticker.factory.StickerFactory;
+import alurastickers.enums.API;
+import alurastickers.extractor.ContentExtractor;
+import alurastickers.menu.ApiMenu;
+import alurastickers.model.Client;
+import alurastickers.model.Content;
 
 public class App {
 	
-	private static final String TOP_MOVIES_URL =
-			"https://raw.githubusercontent.com/alura-cursos/imersao-java-2-api/main/TopMovies.json";
-
-	private static final String MOVIE_TEMPLATE = "\nFilme %d\nTitulo: %s\nPoster: %s\nIMDB Rating: %s %s";
-
-	private static final String STAR = "✰";
-	
 	private static StickerFactory stickerFactory = new StickerFactory();
+	private static ApiMenu apiMenu = new ApiMenu();
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args) {
 		
-		// Criação da conexão HTTP para buscar os Top 10 filmes
-		URI uri = URI.create(TOP_MOVIES_URL);
-		HttpClient client = HttpClient.newHttpClient();
-		HttpRequest request = HttpRequest.newBuilder(uri).GET().build();		
-		HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-		String body = response.body();
+		// Escolha da API a ser utilizada
+		API api = apiMenu.chooseApi();
 
-		// Extração dos dados da resposta (titulo, poster, classificação)
-		JsonParser jsonParser = new JsonParser();
-		List<Map<String, String>> listaFilmes = jsonParser.parse(body);
+		// Criação da conexão HTTP para buscar os dados
+		Client httpClient = new Client();
+		String data = httpClient.findData(api.getUrl());
+
+		// Extração dos dados da resposta
+		ContentExtractor contentExtractor = api.getContentExtractor();
+		List<Content> contentList = contentExtractor.extractContent(data);
 		
-		// Exibição dos dados
-		listaFilmes.forEach(filme -> {
-			int i = listaFilmes.indexOf(filme) + 1;
-			String title = filme.get("title");
-			String imageUrl = filme.get("image");
-			String imdbRating = filme.get("imDbRating");
-
-			System.out.println(String.format(MOVIE_TEMPLATE
-					, i
-					, title
-					, imageUrl
-					, imdbRating
-					, printStarByRating(imdbRating)));
-			try {				
-				InputStream image = new URL(imageUrl).openStream();
-				stickerFactory.createSticker(image, setSubtitle(Double.valueOf(imdbRating)), title);
-			} catch (Exception e) {
+		// Exibição dos dados e criação dos stickers
+		contentList.forEach(content -> {
+			content.print();
+			try {
+				stickerFactory.createSticker(content.getImageInputStream(), content.getTitle(), content.getStickerSubtitle());
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		});
-	}
-	
-	public static String printStarByRating(String imdbRating) {
-		return STAR.repeat(Integer.parseInt(imdbRating.substring(0, 1)));
-	}
-	
-	public static String setSubtitle(Double imdbRating) {
-		if (imdbRating <= 3.0) return "O risco é seu";
-		if (imdbRating <= 6.0) return "É oq tem pra hj";
-		if (imdbRating <= 9.0) return "Vale o ingresso";
-		
-		return "Megadica";
-	}
+
+		System.out.println("\n😀\tStickers criadas com sucesso\t😀!");
+	}	
 }
