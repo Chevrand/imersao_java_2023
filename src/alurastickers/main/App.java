@@ -50,10 +50,10 @@ public class App {
 					, imageUrl
 					, imdbRating
 					, printStarByRating(imdbRating)));
-			try {
+			try {				
 				InputStream image = new URL(imageUrl).openStream();
-				stickerFactory.createSticker(image, title);
-			} catch (IOException e) {
+				stickerFactory.createSticker(image, setSubtitle(Double.valueOf(imdbRating)), title);
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		});
@@ -62,5 +62,12 @@ public class App {
 	public static String printStarByRating(String imdbRating) {
 		return STAR.repeat(Integer.parseInt(imdbRating.substring(0, 1)));
 	}
-
+	
+	public static String setSubtitle(Double imdbRating) {
+		if (imdbRating <= 3.0) return "O risco é seu";
+		if (imdbRating <= 6.0) return "É oq tem pra hj";
+		if (imdbRating <= 9.0) return "Vale o ingresso";
+		
+		return "Megadica";
+	}
 }

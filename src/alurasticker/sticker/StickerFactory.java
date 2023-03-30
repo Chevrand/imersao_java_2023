@@ -19,7 +19,7 @@ import javax.imageio.ImageIO;
 
 public class StickerFactory {
 	
-	public void createSticker(InputStream image, String stickerName) throws IOException {
+	public void createSticker(InputStream image, String subtitle, String stickerName) throws IOException {
 		// leitura da imagem
 		// InputStream localImage = new FileInputStream(new File("assets/movie.jpg"));
 		BufferedImage originalImage = ImageIO.read(image);
@@ -36,24 +36,23 @@ public class StickerFactory {
 		graphics.drawImage(originalImage,0, 0, null);
 		
 		// configura texto a ser escrito
-		String text = "Top 10 IMDB";
 		int textSize = (newHeight / 100) * 6;
 		Font font = new Font("impact", Font.BOLD, textSize);
 		graphics.setColor(Color.YELLOW);		
 		graphics.setFont(font);
 
 		FontMetrics fontMetrics = graphics.getFontMetrics();
-		Rectangle2D rectangle = fontMetrics.getStringBounds(text, graphics);
+		Rectangle2D rectangle = fontMetrics.getStringBounds(subtitle, graphics);
 		int textWidth = (int) rectangle.getWidth();
 		int textHeight = (int) rectangle.getHeight();
 		int textXPosition = (width - textWidth) / 2;
 		int textYPosition = (textBoxHeight - textHeight) / 2;
 
 		// escrever um texto personalizado na imagem (em memória)
-		graphics.drawString(text, textXPosition, newHeight - textYPosition);
+		graphics.drawString(subtitle, textXPosition, newHeight - textYPosition);
 		
 		FontRenderContext fontRenderContext = graphics.getFontRenderContext();
-		TextLayout textLayout = new TextLayout(text, font, fontRenderContext);
+		TextLayout textLayout = new TextLayout(subtitle, font, fontRenderContext);
 		Shape outline = textLayout.getOutline(null);
 		AffineTransform transform = graphics.getTransform();
 		transform.translate(textXPosition, (double) newHeight - textYPosition);
